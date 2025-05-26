@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Tracker</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin: 5px; }
+    ul { padding-left: 0; list-style: none; }
+    li { border: 1px solid #ccc; padding: 5px; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Task Tracker</h1>
+  <input type="text" id="title" placeholder="Task title">
+  <button onclick="addTask()">Add Task</button>
+  <button onclick="loadTasks()">Refresh</button>
+  <ul id="taskList"></ul>
+
+  <script>
+    const api = "/.netlify/functions/items";
+
+    async function loadTasks() {
+      const res = await fetch(api);
+      const tasks = await res.json();
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+      tasks.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t.title;
+        li.onclick = () => deleteTask(t._id);
+        list.appendChild(li);
+      });
+    }
+
+    async function addTask() {
+      const title = document.getElementById("title").value;
+      await fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      loadTasks();
+    }
+
+    async function deleteTask(id) {
+      await fetch(`${api}/${id}`, { method: "DELETE" });
+      loadTasks();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
